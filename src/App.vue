@@ -1,49 +1,44 @@
 <template>
     <div class="container">
-        <div class="task" :key="product.id" v-for="product in products">
-           <h3>{{ product.title }}</h3>
-           <p>{{ product.description }}</p>
-        </div>
-          <div v-if="products.length" v-observe-visibility="handleScrolledToBottom"></div>
+      <Product :items="products" @refetch="fetch">
+        <template v-slot:item="{ item }">
+           <h3>{{ item.title }}</h3>
+           <p>{{ item.description }}</p>
+        </template>
+      </Product>
+        
     </div>
 </template>
 
 <script>
 
-import axios from 'axios';
+import axios from 'axios'
+import Product from './components/Product.vue';
 
 export default {
   name: 'App',
   components: {
-
+    Product
   },
   data() {
     return {
-     products: [],
-     page:1,
-     lastPage:1
+      products: [],
+      lastPage:1
     }
   },
   methods: {
-    async fetch() {
-       let products = await axios.get(`http://localhost:8000/api/products/backend?page=${this.page}`)
-       // this.products = products.data.data
+       async fetch(page) {
+            if(page > this.lastPage) {
+            return
+          }
+
+       let products = await axios.get(`http://localhost:8000/api/products/backend?page=${page}`)
        this.products.push(...products.data.data)
        this.lastPage = products.data.last_page
     },
-      handleScrolledToBottom(isVisible) {
-          if(!isVisible) {
-              return
-          }
-          if(this.page >= this.lastPage) {
-            return
-          }
-          this.page++;
-          this.fetch()
-      }
   },
   mounted() {
-    this.fetch()
+    this.fetch(1)
   }
 }
 </script>
